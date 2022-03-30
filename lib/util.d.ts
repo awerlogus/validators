@@ -3,7 +3,7 @@ import { Json } from '@awerlogus/data-types/lib/json'
 
 // SECTION Types
 
-export type Tuple<T> = ReadonlyArray<T> & { 0: T }
+export type Tuple<T> = (ReadonlyArray<T> & { readonly 0: T }) | readonly []
 
 export type Compute<T> = T extends Function ? T : { [K in keyof T]: T[K] } & unknown
 
