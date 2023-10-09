@@ -2,6 +2,7 @@
     "compilerOptions": {
       "noUncheckedIndexedAccess": true,
       "alwaysStrict": true,
+      "ignoreDeprecations": "5.0",
       "keyofStringsOnly": true,
       "noFallthroughCasesInSwitch": true,
       "downlevelIteration": true,

@@ -7,14 +7,12 @@ export type Tuple<T> = (ReadonlyArray<T> & { readonly 0: T }) | readonly []
 
 export type Compute<T> = T extends Function ? T : { [K in keyof T]: T[K] } & unknown
 
-export type UnionToIntersection<U> = Compute<(U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never>
+export type UnionToIntersection<T> = Compute<(T extends any ? (k: T) => void : never) extends ((k: infer I) => void) ? I : never>
 
-// SECTION Library
+// SECTION Constants
 
-export const isArray: (data: unknown) => data is ReadonlyArray<any>
+export const isArray: (data: unknown) => data is ReadonlyArray<unknown>
 
 export const same: <T extends string | number | boolean>(value: Option<Json>, template: T) => value is T
 
 export const getTypeOf: (data: Option<Json>) => string
-
-export const literalToString: (data: string | boolean | number) => string

@@ -1,60 +1,58 @@
+import type { Validator, ValidatorResult, ValidatorCustomErrors } from './data-type'
 import type { Json, JsonRecord } from '@awerlogus/data-types/lib/json'
 import type { Tuple, Compute, UnionToIntersection } from './util'
 import type { Option } from '@awerlogus/data-types/lib/option'
-import type { Either } from '@awerlogus/data-types/lib/either'
-import type { ValidateError } from './errors'
 
 // SECTION Types
 
-type PropType = 'optional' | 'required'
+export type PropType = 'optional' | 'required'
 
-export type Validator<T> = ValidatorExtension<Option<Json>, T>
+export type PropToObject<P extends PropType, K extends string, V> = P extends 'optional' ? Partial<Record<K, V>> : Record<K, V>
 
-export type ValidatorExtension<P, T> = (data: P) => ValidationResult<T>
+export type PropsToObject<T extends Tuple<Validator<any, JsonRecord, Record<string, any>>>> = UnionToIntersection<ValidatorResult<T[number]>>
 
-export type ValidationResult<T> = Either<ReadonlyArray<ValidateError>, T>
-
-type PropToObject<P extends PropType, K extends string, T> = P extends 'optional' ? { [KEY in K]?: T } : { [KEY in K]: T }
-
-export type ValidatorContent<V extends ValidatorExtension<any, any>> = V extends ValidatorExtension<any, infer T> ? T : never
-
-type PropsToObject<T extends Tuple<ValidatorExtension<Record<string, Json>, Record<string, any>>>> = UnionToIntersection<ValidatorContent<T[number]>>
-
-type TupleFromValidator<T extends Tuple<Validator<any>>> =
+export type TupleFromValidator<T extends Tuple<Validator<any, any, any>>> =
   T extends [infer HEAD, ...infer Tail]
-  ? HEAD extends Validator<any>
-    ? Tail extends Tuple<Validator<any>>
-      ? [ValidatorContent<HEAD>, ...TupleFromValidator<Tail>]
-      : [ValidatorContent<HEAD>]
-    : []
-  : []
+  ? HEAD extends Validator<any, any, any>
+    ? Tail extends Tuple<Validator<any, any, any>>
+      ? [ValidatorResult<HEAD>, ...TupleFromValidator<Tail>]
+      : [ValidatorResult<HEAD>]
+  : [] : []
 
-// SECTION Library
+export type TupleValidatorErrors<T extends Tuple<Validator<any, any, any>>> = UnionToIntersection<{ [K in keyof T & `${number}`] : ValidatorCustomErrors<T[K]> }[keyof T & `${number}`]>
 
-export const enumeration: <P extends string | boolean | number>(object: Record<string, P>) => Validator<P>
+// SECTION Error declarations
 
-export const nullVal: Validator<null>
+export type LiteralError = { 'is-literally': { expected: string | boolean | number }}
 
-export const boolean: Validator<boolean>
+export type EnumError = { 'part-of-enum': { enum: Record<string, string | boolean | number> }}
 
-export const literal: <P extends string | boolean | number>(value: P) => Validator<P>
+// SECTION Methods
 
-export const number: Validator<number>
+export const enumeration: <P extends string | boolean | number>(object: Record<string, P>) => Validator<EnumError, Option<Json>, P>
 
-export const string: Validator<string>
+export const nullVal: Validator<{}, Option<Json>, null>
 
-export const tuple: <P extends Tuple<Validator<any>>>(validators: P) => Validator<TupleFromValidator<P>>
+export const boolean: Validator<{}, Option<Json>, boolean>
 
-export const array: <P>(validator: Validator<P>) => Validator<ReadonlyArray<P>>
+export const literal: <P extends string | boolean | number>(value: P) => Validator<LiteralError, Option<Json>, P>
 
-export const union: <P extends Tuple<Validator<any>>>(validators: P) => Validator<ValidatorContent<P[number]>>
+export const number: Validator<{}, Option<Json>, number>
 
-export const undef: Validator<undefined>
+export const string: Validator<{}, Option<Json>, string>
 
-export const prop: <P extends PropType, K extends string, R>(type: P, key: K, validator: Validator<R>) => ValidatorExtension<JsonRecord, PropToObject<P, K, R>>
+export const tuple: <P extends Tuple<Validator<Record<string, any>, Option<Json>, any>>>(validators: P) => Validator<Compute<LiteralError & TupleValidatorErrors<P>>, Option<Json>, TupleFromValidator<P>>
 
-export const record: <V>(validator: Validator<V>) => Validator<Record<string, V>>
+export const array: <V extends Validator<any, Option<Json>, any>>(validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, Option<Json>, ReadonlyArray<ValidatorResult<V>>>
 
-export const exact: <P extends Tuple<ValidatorExtension<JsonRecord, Record<string, any>>>>(props: P) => Validator<PropsToObject<P>>
+export const union: <P extends Tuple<Validator<any, Option<Json>, any>>>(validators: P) => Validator<Compute<TupleValidatorErrors<P>>, Option<Json>, ValidatorResult<P[number]>>
 
-export const type: <P extends Tuple<ValidatorExtension<JsonRecord, Record<string, any>>>>(props: P) => Validator<JsonRecord & PropsToObject<P>>
+export const undef: Validator<{}, Option<Json>, undefined>
+
+export const prop: <V extends Validator<any, Option<Json>, any>, P extends PropType, K extends string>(type: P, key: K, validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, JsonRecord, PropToObject<P, K, ValidatorResult<V>>>
+
+export const record: <V extends Validator<any, Option<Json>, any>>(validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, Option<Json>, Record<string, V>>
+
+export const exact: <P extends Tuple<Validator<any, JsonRecord, Record<string, any>>>>(props: P) => Validator<Compute<TupleValidatorErrors<P>>, Option<Json>, PropsToObject<P>>
+
+export const type: <P extends Tuple<Validator<any, JsonRecord, Record<string, any>>>>(props: P) => Validator<Compute<TupleValidatorErrors<P>>, Option<Json>, JsonRecord & PropsToObject<P>>
