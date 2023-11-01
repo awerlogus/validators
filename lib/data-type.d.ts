@@ -1,6 +1,5 @@
-import type { Either, Left, Right } from '@awerlogus/data-types/lib/either'
-import type { Option } from '@awerlogus/data-types/lib/option'
-import type { Json } from '@awerlogus/data-types/lib/json'
+import type { Either } from '@awerlogus/data-types/lib/either'
+import type { Elem } from '@awerlogus/data-types/lib/array'
 import type { ValidationError } from './errors'
 import type { Compute } from './util'
 
@@ -17,7 +16,7 @@ export type ValidatorResult<V extends Validator<any, any, any>> = V extends Vali
 export type CustomValidationErrorAlgebra<E extends ValidationError<any> & { __tag: 'condition' }> = { [C in E['condition']]: (E & { condition: C })['details'] }
 
 // @ts-ignore
-export type ValidatorCustomErrors<V extends Validator<any, any, any>> = ReturnType<V> extends Left<ReadonlyArray<infer E>> | Right<any> ? CustomValidationErrorAlgebra<E & { __tag: 'condition' }> : never
+export type ValidatorCustomErrors<V extends Validator<any, any, any>> = ReturnType<V> extends Either<infer E, any> ? CustomValidationErrorAlgebra<Elem<E> & { __tag: 'condition' }> : never
 
 // SECTION Methods
 
