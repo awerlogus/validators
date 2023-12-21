@@ -51,7 +51,7 @@ export const undef: Validator<{}, Option<Json>, undefined>
 
 export const prop: <V extends Validator<any, Option<Json>, any>, P extends PropType, K extends string>(type: P, key: K, validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, JsonRecord, PropToObject<P, K, ValidatorResult<V>>>
 
-export const record: <V extends Validator<any, Option<Json>, any>>(validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, Option<Json>, Record<string, V>>
+export const record: <V extends Validator<any, Option<Json>, any>>(validator: V) => Validator<Compute<ValidatorCustomErrors<V>>, Option<Json>, Record<string, ValidatorResult<V>>>
 
 export const exact: <P extends Tuple<Validator<any, JsonRecord, Record<string, any>>>>(props: P) => Validator<Compute<TupleValidatorErrors<P>>, Option<Json>, PropsToObject<P>>
 
